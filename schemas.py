@@ -11,6 +11,12 @@ class BookBase(BaseModel):
     publication_date: Optional[datetime.date] = None
 
 
+# request model used when client does NOT provide author_id in path POST /authors/{author_id}/books
+class BookCreateNoAuthor(BookBase):
+    pass
+
+
+# full create model stored in DB (includes author_id)
 class BookCreate(BookBase):
     author_id: int
 
@@ -54,7 +60,7 @@ class AuthorUpdate(BaseModel):
 
 class AuthorRead(AuthorBase):
     id: int
-    books: List[BookRead] = []
+    books: List[BookRead] = Field(default_factory=list)
 
     class Config:
         orm_mode = True

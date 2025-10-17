@@ -1,8 +1,11 @@
 from typing import List, Optional
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
-from . import models, schemas
+# use absolute imports to avoid "attempted relative import with no known parent package"
+import models
+import schemas
 
 
 def get_author(db: Session, author_id: int) -> Optional[models.AuthorModel]:
@@ -59,10 +62,17 @@ def get_books(db: Session, skip: int = 0, limit: int = 100, author_id: Optional[
 
 
 def create_book(db: Session, book: schemas.BookCreate) -> models.BookModel:
-    # optionally ensure author exists; here we allow FK constraint to enforce it
+    # pre-validate author to give clear error instead of DB integrity error
+    if db.get(models.AuthorModel, book.author_id) is None:
+        raise ValueError("Author not found")
+
     db_book = models.BookModel(**book.dict())
     db.add(db_book)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise
     db.refresh(db_book)
     return db_book
 
