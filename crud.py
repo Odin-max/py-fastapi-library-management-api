@@ -51,8 +51,11 @@ def get_book(db: Session, book_id: int) -> Optional[models.BookModel]:
     return db.get(models.BookModel, book_id)
 
 
-def get_books(db: Session, skip: int = 0, limit: int = 100) -> List[models.BookModel]:
-    return db.query(models.BookModel).offset(skip).limit(limit).all()
+def get_books(db: Session, skip: int = 0, limit: int = 100, author_id: Optional[int] = None) -> List[models.BookModel]:
+    q = db.query(models.BookModel)
+    if author_id is not None:
+        q = q.filter(models.BookModel.author_id == author_id)
+    return q.offset(skip).limit(limit).all()
 
 
 def create_book(db: Session, book: schemas.BookCreate) -> models.BookModel:
